@@ -1,6 +1,9 @@
+## 1.介绍及spring boot操作
+**介绍：**https://blog.csdn.net/yanpenglei/article/details/79261875
+**操作：**https://www.jianshu.com/p/fdd7e303dff1
+**spring boot注解介绍：**https://cloud.tencent.com/developer/article/1384034
+
 ## 2.概念
-
-
 
 | SQL术语/概念 | MongoDB术语/概念 | 解释/说明                           |
 | :----------- | :--------------- | :---------------------------------- |
@@ -15,9 +18,11 @@
 ## 3.命令
 ### 3.1 基础命令
 ```shell
-show dbs; 		#展示所有数据库
-use dbname;		#切换数据库
-db;				#展示当前数据库名称
+show dbs; 					#展示所有数据库
+use dbname;					#切换数据库
+db;							#展示当前数据库名称
+show collections;			#展示当前数据库所有的集合名称
+db.collectionName.find();	#展示collectionName集合下所有记录
 ```
 
 ### 3.2 数据库操作
@@ -60,5 +65,88 @@ options 可以是如下参数：
 ```shell
 db.collectionName.drop()
 ```
+### 3.4 文档操作
+#### 3.4.1 插入文档
+```shell
+db.COLLECTION_NAME.insert(document)	
+#若插入的数据主键已经存在，则会抛 org.springframework.dao.DuplicateKeyException 异常，提示主键重复，不保存当前数据。
+
+db.COLLECTION_NAME.save(document)	
+#已废弃，新版本可使用insertOne()或者replaceOne()
+```
+
+----
+
+**3.2 版本之后新增**
+```shell
+#向集合插入一个新文档
+db.collection.insertOne(
+   <document>,
+   {
+      writeConcern: <document>
+   }
+)
+
+#向集合插入一个多个文档
+db.collection.insertMany(
+   [ <document 1> , <document 2>, ... ],
+   {
+      writeConcern: <document>,
+      ordered: <boolean>
+   }
+)
+```
+
+```shell
+#操作
+
+#  插入单条数据
+> var document = db.collection.insertOne({"a": 3})
+> document
+{
+        "acknowledged" : true,
+        "insertedId" : ObjectId("571a218011a82a1d94c02333")
+}
+
+#  插入多条数据
+> var res = db.collection.insertMany([{"b": 3}, {'c': 4}])
+> res
+{
+        "acknowledged" : true,
+        "insertedIds" : [
+                ObjectId("571a22a911a82a1d94c02337"),
+                ObjectId("571a22a911a82a1d94c02338")
+        ]
+}
+```
 
 
+
+#### 3.4.2 修改操作
+
+** update()方法 **
+```shell
+# 将匹配到的值都进行修改
+# <multi>属性默认是false(不写就是默认),即每次只修改扫描到的第一条数据；
+# 当为true时，修改所有
+db.col.update({'title':'MongoDB 教程'},{$set:{'title':'MongoDB'}},{multi:true})
+```
+
+** save()方法 **
+```shell
+# 将匹配到的值都进行修改
+# <multi>属性默认是false(不写就是默认),即每次只修改扫描到的第一条数据；
+# 当为true时，修改所有
+db.col.save({
+    "_id" : ObjectId("5f2374ebb38cdd2108824376"),
+    "title" : "MongoDB",
+    "description" : "MongoDB 是一个 Nosql 数据库",
+    "by" : "Runoob",
+    "url" : "http://www.runoob.com",
+    "tags" : [
+            "mongodb",
+            "NoSQL"
+    ],
+    "likes" : 110
+})
+```
