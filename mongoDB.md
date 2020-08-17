@@ -124,7 +124,8 @@ db.collection.insertMany(
 
 #### 3.4.2 修改操作
 
-** update()方法 **
+**update()方法 **
+
 ```shell
 # 将匹配到的值都进行修改
 # <multi>属性默认是false(不写就是默认),即每次只修改扫描到的第一条数据；
@@ -132,7 +133,9 @@ db.collection.insertMany(
 db.col.update({'title':'MongoDB 教程'},{$set:{'title':'MongoDB'}},{multi:true})
 ```
 
-** save()方法 **
+----
+**save()方法 **
+
 ```shell
 # 将匹配到的值都进行修改
 # <multi>属性默认是false(不写就是默认),即每次只修改扫描到的第一条数据；

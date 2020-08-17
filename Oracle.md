@@ -28,7 +28,28 @@ ps:https://blog.csdn.net/qq_43437465/category_8992459.html
 | 1.2e-4      | NUMBER(2,5)  | 0.00012           |
 | 1.2e-5      | NUMBER(2,5)  | 0.00001           |
 
-   INTEGER类型
+
+### 1.1.1 NUMBER ( P ) 表示整数
+
+完整语法： NUMBER（precision , scale）
+
+- 如果没有设置scale，则默认取值为0，即NUMBER( P )表示整数
+- P表示数字的总位数，取值为1~38
+
+用法：
+一般用来在表中存放如编码、年龄、次数等用整数记录的数据
+
+###  1.1.2 NUMBER ( P ， S ) 表示浮点数
+
+- NUMBER（precision , scale）
+- precision： NUMBER可以存储的最大数字长度（不包括左右两边的0）
+- scale：在小数点右边的最大数字长度（包括左侧0）
+- 指定了s但是没有指定p，则默认p为38，如：
+  列名 NUMBER ( * , s )
+
+用法 :
+经常用来做表中存放金额，成绩等有小数位数的数据
+
 
    ## 1.2 CHAR
 
@@ -70,11 +91,24 @@ ps:https://blog.csdn.net/qq_43437465/category_8992459.html
 
    DATE是最常用的数据类型，日期数据类型存储日期和时间信息。虽然可以用字符或数字类型表示日期和时间信息，但是日期数据类型具有特殊关联的属性。为每个日期值，Oracle 存储以下信息： 世纪、 年、 月、 日期、 小时、 分钟和秒。一般占用7个字节的存储空间。
 
-   
+- 第1字节：世纪+100
+- 第2字节：年
+- 第3字节：月
+- 第4字节：天
+- 第5字节：小时+1
+- 第6字节：分+1
+- 第7字节：秒+1
 
    ## 1.6 TimeStamp
 
-   这是一个7字节或12字节的定宽日期/时间数据类型。它与DATE数据类型不同，因为TIMESTAMP可以包含小数秒，带小数秒的TIMESTAMP在小数点右边最多可以保留9位
+   这是一个7字节或12字节的定宽日期/时间数据类型。它与DATE数据类型不同，因为TIMESTAMP可以包含小数秒，带小数秒的TIMESTAMP在小数点右边最多可以保留9位,TIMESTAMP是Oracle常用的日期类型。与DATE的区别是不仅可以保存日期和时间，还能保存小数秒，最高精度可以到ns（纳秒）
+
+- 数据库内部用7或者11个字节存储，精度为0，用7字节存储，与DATE功能相同，精度大于0则用11字节存储。
+- 格式为：
+  第1字节~第7字节：和DATE相同
+  第8~11字节：纳秒，采用4个字节存储，内部运算类型为整形。
+
+
 
 # 2. DDL语句
 
@@ -177,8 +211,190 @@ SELECT UPPER('helloword'),LOWER('HELLOWORD'),INITCAP('HELLOWORD') FROM  dual
  当查询的内容不和任何表中数据有关系时，可以使用伪表，伪表只会查询出一条记录。
 ```
 
-### TRIM,LTRIM,RTRIM
+### 4.1.4TRIM,LTRIM,RTRIM
 去除当前字符串中两边的指定重复字符，LTRIM仅去除左侧的，RTRIM则仅去除右侧的。
 ```SQL
- SELECT TRIM('A' FROM 'AAAALIVEAAAAA') FROM dual
+SELECT TRIM('A' FROM 'AAAALIVEAAAAA') FROM dual;
+-- LIVE
+ 
+SELECT LTRIM('AAAAALIVEAAAA','A') FROM dual;
+-- LIVEAAAA
+
+SELECT RTRIM('AAAALIVEAAAA','A') FROM dual;
+-- AAAALIVE
+
+SELECT RTRIM('LIVEDBAC','ABCD') FROM dual;
+-- LIVE
+
+SELECT LTRIM('BBDAACDCLIVE','ABCD') FROM dual;
+-- LIVE
+
+-- RTRIM、 LTRIM可以去掉字符串中指定的多个字符，凡是出现的给定的字符统统去掉（不是按照字符给定的顺序去掉的）。
 ```
+
+### 4.1.5 LPAD,RPAD补位函数
+```SQL
+-- 向左侧以指定字符进行补位
+SELECT LPAD(800,5,'$') FROM dual;
+
+-- 向右侧以指定字符进行补位
+SELECT RPAD(800,5,'$') FROM dual;
+```
+![LPAD函数](https://img-blog.csdnimg.cn/20190528163343974.PNG)
+
+![RPAD函数](https://img-blog.csdnimg.cn/20190528163800792.PNG)
+
+### 4.1.6 SUBSTR截取字符串
+
+- SUBSTR（char , [m[,n]]）
+  用于获取字符串的子串，返回char中从m位开始取n个字符
+- 如果m = 0，则从首字符开始，如果m取负数，则从尾部开始
+- 如果没有设置n，或者n的长度超过了char的长度，则取到字符串末尾为止。
+
+❤️ **注意：**
+（1） 数据库中的下标都是从1开始的
+（2）截取的位置可以是负数，若是则表示从倒数第几个字符开始截取
+
+```SQL
+SELECT SUBSTR('THINKING IN JAVA',13，4) FROM dual;
+-- JAVA
+
+SELECT SUBSTR('THINKING IN JAVA',-4)FROM dual;
+-- JAVA
+```
+### 4.1.7 INSTR
+- INSTR（char1,char2[,n,m]）函数
+- 查找char2在char1中的位置
+n为从第几个字符开始检索
+m为第几次出现
+n,m不写则默认都是1
+
+```SQL
+SELECT INSTR('THINKING IN JAVA','IN',4，1) FROM dual;
+-- 6
+```
+
+## 4.2 数值函数
+### 4.2.1 ROUND
+
+- ROUND(n [ , m ]) ：用于四舍五入
+- 参数中的n可以是任何数字，指要被处理的数字
+- m必须是整数
+- m取正数则四舍五入到小数点后第m位
+- m取0值则四舍五入到整数位
+- m取负数，则四舍五入到小数点前m为
+- m缺省，默认值是0
+
+```sql
+
+SELECT ROUND(45.678，2) FROM dual;
+-- 45.68
+
+SELECT ROUND(45.678，0) FROM dual;
+-- 46
+
+SELECT ROUND(55.678，-2) FROM dual
+-- 100
+```
+### 4.2.2 TRUNC
+- TRUNC ( n [ , m ]) ：用于截取数字
+- m取正数则截取到小数点后第m位
+- m取0值则截取到整数位
+- m取负数则截取到小数点前m为
+- m缺省默认值是0
+
+```sql
+SELECT ROUND(45.68，1) FROM dual;
+-- 45.6
+
+SELECT ROUND(45.68) FROM dual;
+-- 45
+
+SELECT ROUND(45.68，-1) FROM dual;
+-- 40
+```
+
+### 4.2.3 MOD
+- MOD(m,n)求余数
+```sql
+select mod(100,3) from dual;
+-- 1
+```
+
+❤️ **注意：**
+如果n为0 则直接返回m
+
+### 4.2.4 CEIL,FLOOR
+向上取整，向下取整
+```sql
+ SELECT CEIL(45.678) FROM dual;
+ -- 46
+
+select floor(45.678) from dual;
+-- 45
+```
+
+## 4.3 日期转换函数
+### 4.3.1 日期和字符转换函数用法（to_date,to_char）
+- TO_DATE(char[,fmt [, nlsparams]])：将字符串按照定制格式转换为日期类型。
+- char要转换的字符串
+- fmt：格式
+- nlsparams：指定日期语言
+
+## 4.4 空值函数
+### 4.4.1 NVL()
+空值函数NVL（arg1,arg2）
+当arg1为NULL，函数返回arg2的值，若不为NULL，则返回arg1本身。
+所以该函数的作用是将NULL值替换为一个非NULL值。
+```SQL
+select NVL(NULL,0) FROM DUAL;
+-- 0
+```
+
+### 4.4.1 NVL2()
+NVL2（arg1,arg2,arg3）
+当arg1不为NULL，则函数返回arg2
+当arg1位NULL，则函数返回arg3
+该函数是根据一个值是否为NULL来返回两个不同结果
+```sql
+select NVL2(null, '有值', '无值') from dual;
+```
+
+## 4.5 聚合函数
+
+
+# 5 序列
+
+## 5.1 什么是序列
+
+- 序列（SEQUENCE）是一种用来生成唯一数字值的数据库对象
+- 序列的值由Oracle程序按递增或递减顺序自动生成，通过用来自动产生表的主键值，是一种高效率获得唯一键值的途径
+- 序列是独立的数据库对象，和表是独立的对象，序列并不依附于表
+- 通常情况下，一个序列为一个表提供主键值，但一个序列也可以为多个表提供主键值
+
+### 5.1.1 序列创建语法
+```sql
+create sequence SEQ_LOG_ID
+minvalue 1  --增长最小值
+maxvalue 9999999999999999999999999999  --增长最大值,也可以设置NOMAXvalue -- 不设置最大值
+start with 101  --从101开始计数
+increment by 1  --自增步长为1
+cache 50  --设置缓存cache个序列，如果系统down掉了或者其它情况将会导致序列不连续，也可以设置为---NOCACHE防止跳号
+cycle;  --循环,当达到最大值时,不是从start with设置的值开始循环。而是从1开始循环
+```
+### 5.1.1 序列使用语法
+```sql
+insert into 表名(id,name)values(seqtest.Nextval,'sequence 插入测试');
+/*
+CurrVal：返回 sequence的当前值 NextVal：增加sequence的值，然后返回 增加后sequence值
+注意：第一次NEXTVAL返回的是初始值；随后的NEXTVAL会自动增加你定义的INCREMENT BY值，然后返回增加后的值。
+CURRVAL 总是返回当前SEQUENCE的值，但是在第一次NEXTVAL初始化之后才能使用CURRVAL，否则会出错。
+一次NEXTVAL会增加一次 SEQUENCE的值，所以如果你在同一个语句里面使用多个NEXTVAL，其值就是不一样的。- 如果指定CACHE值，ORACLE就可以预先在内存里面放置一些sequence，这样存取的快些。cache里面的取完后，oracle自动再取一组 到cache。 使用cache或许会跳号， 比如数据库突然不正常down掉（shutdown abort),cache中的sequence就会丢失. 所以可以在create sequence的时候用nocache防止这种情况。
+*/
+```
+
+
+
+
+
+
