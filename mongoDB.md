@@ -153,3 +153,110 @@ db.col.save({
     "likes" : 110
 })
 ```
+
+
+
+#### 3.4.3 删除操作
+```shell
+db.collection.remove(
+   <query>,
+   {
+     justOne: <boolean>,
+     writeConcern: <document>
+   }
+)
+```
+
+**参数说明：**
+
+- **query** :（可选）删除的文档的条件。
+- **justOne** : （可选）如果设为 true 或 1，则只删除一个文档，如果不设置该参数，或使用默认值 false，则删除所有匹配条件的文档。
+- **writeConcern** :（可选）抛出异常的级别。
+
+
+```shell
+db.col.deleteOne({'title':'MongoDB 教程'});
+db.col.deleteMany({'title':'MongoDB 教程'});
+```
+
+
+#### 3.4.3 查询操作
+
+```shell
+db.collection.find(query, projection)
+```
+
+- **query** ：可选，使用查询操作符指定查询条件
+- **projection** ：可选，使用投影操作符指定返回的键。查询时返回文档中所有键值， 只需省略该参数即可（默认省略）。
+
+若不指定 projection，则默认返回所有键，指定 projection 格式如下，有两种模式
+
+```
+db.collection.find(query, {title: 1, by: 1}) // inclusion模式 指定返回的键，不返回其他键
+db.collection.find(query, {title: 0, by: 0}) // exclusion模式 指定不返回的键,返回其他键
+```
+
+_id 键默认返回，需要主动指定 _id:0 才会隐藏
+
+两种模式不可混用（因为这样的话无法推断其他键是否应返回）
+
+```
+db.collection.find(query, {title: 1, url: 0}) // 错误
+```
+
+只能全1或全0，除了在inclusion模式时可以指定_id为0
+
+```shell
+db.collection.find(query, {_id:0, title: 1, url: 1}) // 正确
+```
+
+**MongoDB 与 RDBMS Where 语句比较**
+如果你熟悉常规的 SQL 数据，通过下表可以更好的理解 MongoDB 的条件语句查询：
+
+| 操作       | 格式                     | 范例                                        | RDBMS中的类似语句       |
+| :--------- | :----------------------- | :------------------------------------------ | :---------------------- |
+| 等于       | `{<key>:<value>`}        | `db.col.find({"by":"菜鸟教程"}).pretty()`   | `where by = '菜鸟教程'` |
+| 小于       | `{<key>:{$lt:<value>}}`  | `db.col.find({"likes":{$lt:50}}).pretty()`  | `where likes < 50`      |
+| 小于或等于 | `{<key>:{$lte:<value>}}` | `db.col.find({"likes":{$lte:50}}).pretty()` | `where likes <= 50`     |
+| 大于       | `{<key>:{$gt:<value>}}`  | `db.col.find({"likes":{$gt:50}}).pretty()`  | `where likes > 50`      |
+| 大于或等于 | `{<key>:{$gte:<value>}}` | `db.col.find({"likes":{$gte:50}}).pretty()` | `where likes >= 50`     |
+| 不等于     | `{<key>:{$ne:<value>}}`  | `db.col.find({"likes":{$ne:50}}).pretty()`  | `where likes != 50`     |
+
+若是50<likes<110
+
+写法为
+```shell
+db.col.find({likes: { $lt: 110 ,$gt: 50}})
+```
+
+
+**MongoDB  AND条件语句**
+
+```shell
+db.col.find({key1:value1, key2:value2}).pretty()
+```
+
+**MongoDB  OR条件语句**
+
+```shell
+db.col.find({$or:[{"by":"菜鸟教程"},{"title": "MongoDB 教程"}]}).pretty()
+```
+
+**MongoDB  AND和OR联合使用**
+
+```shell
+db.col.find({"likes": {$gt:50}, $or: [{"by": "菜鸟教程"},{"title": "MongoDB 教程"}]}).pretty()
+```
+
+**MongoDB Limit与Skip方法**
+```shell
+# 以下实例为显示查询文档中的两条记录
+db.col.find({},{"title":1,_id:0}).limit(2)
+
+#以下实例只会显示第二条文档数据
+db.col.find({},{"title":1,_id:0}).limit(1).skip(1)
+
+#注意：无论limit是在前面还是后面，skip出现时，skip优先执行
+```
+❤️此外，limit和skip联合使用可以用来分页，但是当数据量大的时候会对性能有一定影响
+官网建议：https://www.cnblogs.com/woshimrf/p/mongodb-pagenation-performance.html#_caption_1
