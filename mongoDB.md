@@ -222,13 +222,11 @@ db.collection.find(query, {_id:0, title: 1, url: 1}) // 正确
 | 大于或等于 | `{<key>:{$gte:<value>}}` | `db.col.find({"likes":{$gte:50}}).pretty()` | `where likes >= 50`     |
 | 不等于     | `{<key>:{$ne:<value>}}`  | `db.col.find({"likes":{$ne:50}}).pretty()`  | `where likes != 50`     |
 
-若是50<likes<110
-
-写法为
 ```shell
+#若是50<likes<110
+#写法为
 db.col.find({likes: { $lt: 110 ,$gt: 50}})
 ```
-
 
 **MongoDB  AND条件语句**
 
@@ -248,7 +246,15 @@ db.col.find({$or:[{"by":"菜鸟教程"},{"title": "MongoDB 教程"}]}).pretty()
 db.col.find({"likes": {$gt:50}, $or: [{"by": "菜鸟教程"},{"title": "MongoDB 教程"}]}).pretty()
 ```
 
+**MongoDB sort() 方法**
+```shell
+#sort() 方法可以通过参数指定排序的字段，并使用 1 和 -1 来指定排序的方式，其中 1 为升序排列，而 -1 是用于降序排列。
+db.col.find().sort({_id:1}).limit(1)
+```
+❤️注意：skip(), limilt(), sort()三个放在一起执行的时候，执行的顺序是先 sort(), 然后是 skip()，最后是显示的 limit()。
+
 **MongoDB Limit与Skip方法**
+skip方法在执行时，会遍历所有数据，一条一条过滤。
 ```shell
 # 以下实例为显示查询文档中的两条记录
 db.col.find({},{"title":1,_id:0}).limit(2)
@@ -260,3 +266,32 @@ db.col.find({},{"title":1,_id:0}).limit(1).skip(1)
 ```
 ❤️此外，limit和skip联合使用可以用来分页，但是当数据量大的时候会对性能有一定影响
 官网建议：https://www.cnblogs.com/woshimrf/p/mongodb-pagenation-performance.html#_caption_1
+
+
+**MongoDB 分页**
+```shell
+# 方法一
+# 查询第一页
+db.col.find().sort({_id:1}).limit("pageSize");
+
+# 查询之后的页数
+db.col.find().sort({_id:1}).limit("pageSize").skip("pageSize * pageNum");
+```
+该方法在数据量大的情况下，性能会有点低，原因由skip方法导致。
+
+----
+
+```shell
+# 方法二
+# 查询第一页
+db.col.find().sort({_id:1}).limit("pageSize");
+
+# 查询之后的页数
+# 获取每页最后一条记录的_id为lastOneId
+db.col.find({_id:{$gt: lastOneId}}).sort({_id:1}).limit("pageSize") 
+```
+
+### 3.5 管道操作
+
+### 3.6 聚合操作
+
